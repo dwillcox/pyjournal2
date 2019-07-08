@@ -57,6 +57,11 @@ def create_topic(topic, defs):
     except:
         sys.error("unable to create a new topic")
 
+    try:
+        open(os.path.join(source_dir, topic, "{}_home.rst"), 'a').close()
+    except:
+        sys.error("unable to create topic home entry")
+
 def build(defs, show=0):
     """build the journal.  This entails writing the TOC files that link to
     the individual entries and then running the Sphinx make command
@@ -101,6 +106,8 @@ def build(defs, show=0):
             tf.write(len(topic)*"#" + "\n")
             tf.write("{}\n".format(topic))
             tf.write(len(topic)*"#" + "\n")
+
+            tf.write(".. include:: {}_home.rst\n".format(topic))
 
             for y in years:
                 tf.write(".. include:: {}.rst\n".format(y))

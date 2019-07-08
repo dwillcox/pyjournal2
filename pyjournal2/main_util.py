@@ -88,6 +88,17 @@ def get_args(defs):
         cont_ps.add_argument("images", help="images to include as figures in the entry",
                              nargs="*", default=None, type=str)
 
+        # the edit command
+        edit_ps = sp.add_parser("edit",
+                                help="edit the topic homepage, with optional images")
+        edit_ps.add_argument("--link", metavar="link-files",
+                             help="files to link in the entry",
+                             type=str, default=None)
+        edit_ps.add_argument("topic", help="the name of the topic to add to",
+                             nargs="?", default="main", type=str)
+        edit_ps.add_argument("images", help="images to include as figures in the entry",
+                             nargs="*", default=None, type=str)
+
         # the build command
         build_ps = sp.add_parser("build",
                                  help="build a PDF of the journal")
@@ -189,6 +200,19 @@ def main(args, defs):
         _, entries = build_util.get_topic_entries(topic, defs)
 
         entry_util.entry(topic, images, link_file, defs, use_date=entries[-1])
+
+    elif action == "edit":
+        # this is basically the same as entry, but we edit the top
+        # level topic file so it is like a "sticky" post.
+
+        images = args["images"]
+        topic = args["topic"]
+        link_file = args["link"]
+
+        # get the entry id of the last entry for this topic
+        _, entries = build_util.get_topic_entries(topic, defs)
+
+        entry_util.entry(topic, images, link_file, defs, edit_topic=True)
 
     elif action == "build":
         build_util.build(defs)

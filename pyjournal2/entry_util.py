@@ -58,7 +58,7 @@ def get_unique_string():
     now = datetime.datetime.now()
     return str(now.replace(microsecond=0)).replace(" ", "_").replace(":", ".")
 
-def entry(topic, images, link_file, defs, string=None, use_date=None):
+def entry(topic, images, link_file, defs, string=None, use_date=None, edit_topic=False):
     """create an entry"""
 
     try:
@@ -67,17 +67,24 @@ def entry(topic, images, link_file, defs, string=None, use_date=None):
         editor = "emacs"
 
     # determine the filename
-    if use_date is not None:
-        entry_dir = use_date
-    else:
-        entry_dir = get_dir_string()
-    ofile = entry_dir + ".rst"
+    if not edit_topic:
+        if use_date is not None:
+            entry_dir = use_date
+        else:
+            entry_dir = get_dir_string()
+        ofile = entry_dir + ".rst"
 
-    # determine the directory we place it in -- this is the form yyyy-mm-dd/
-    odir = "{}/journal-{}/source/{}/{}/".format(defs["working_path"],
-                                                defs["nickname"],
-                                                topic,
-                                                entry_dir)
+        # determine the directory we place it in -- this is the form yyyy-mm-dd/
+        odir = "{}/journal-{}/source/{}/{}/".format(defs["working_path"],
+                                                    defs["nickname"],
+                                                    topic,
+                                                    entry_dir)
+    else:
+        entry_dir = ""
+        ofile = "{}_home.rst".format(topic)
+        odir = "{}/journal-{}/source/{}/".format(defs["working_path"],
+                                                 defs["nickname"],
+                                                 topic)
 
     if not os.path.isdir(odir):
         try:
@@ -88,7 +95,10 @@ def entry(topic, images, link_file, defs, string=None, use_date=None):
 
     entry_file = os.path.join(odir, ofile)
     if not os.path.isfile(entry_file):
-        header = len(entry_dir)*"=" + "\n" + "{}\n".format(entry_dir) + len(entry_dir)*"=" + "\n"
+        if edit_topic:
+            header = ""
+        else:
+            header = len(entry_dir)*"=" + "\n" + "{}\n".format(entry_dir) + len(entry_dir)*"=" + "\n"
         header += SYMBOLS + "\n\n"
     else:
         header = ""
@@ -134,6 +144,11 @@ def entry(topic, images, link_file, defs, string=None, use_date=None):
 
             files_copied.append(im_copy)
 
+            if edit_topic:
+                im_rel_path = "/{}/{}".format(topic, im_copy)
+            else:
+                im_rel_path = "/{}/{}/{}".format(topic, entry_dir, im_copy)
+
             if im in images:
                 # create a unique label for latex referencing
                 idx = im_copy.lower().rfind(".jpg")
@@ -146,11 +161,11 @@ def entry(topic, images, link_file, defs, string=None, use_date=None):
                 # add the figure text
                 for l in FIGURE_STR.split("\n"):
                     f.write("{}\n".format(
-                        l.replace("@figname@", "/{}/{}/{}".format(topic, entry_dir, im_copy)).replace("@figlabel@", im0).rstrip()))
+                        l.replace("@figname@", im_rel_path).replace("@figlabel@", im0).rstrip()))
 
             else:
                 # add the download directive
-                f.write(":download:`{} </{}/{}/{}>`\n\n".format(im_copy, topic, entry_dir, im_copy))
+                f.write(":download:`{} <{}>`\n\n".format(im_copy, im_rel_path))
 
     f.close()
 
